@@ -1,0 +1,216 @@
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:var(--font-sans);color:var(--text-primary)}
+h3{font-size:13px;font-weight:500;letter-spacing:.06em;text-transform:uppercase;color:var(--text-secondary);margin:20px 0 8px}
+.section{margin-bottom:24px}
+.step{display:grid;grid-template-columns:28px 1fr auto;align-items:start;gap:10px;padding:8px 0;border-bottom:1px solid var(--border)}
+.step:last-child{border-bottom:none}
+.step-num{width:24px;height:24px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:500;flex-shrink:0;margin-top:1px}
+.step-body{display:flex;flex-direction:column;gap:2px}
+.step-title{font-size:13px;font-weight:500}
+.step-detail{font-size:11px;color:var(--text-secondary)}
+.step-code{font-size:10px;font-family:var(--font-mono);color:var(--text-muted);margin-top:2px}
+.badge{display:inline-flex;align-items:center;gap:3px;padding:2px 7px;border-radius:4px;font-size:10px;font-weight:500;white-space:nowrap;align-self:flex-start;margin-top:2px}
+.ok .step-num{background:#E1F5EE;color:#085041}
+.warn .step-num{background:#FAEEDA;color:#633806}
+.fail .step-num{background:#FCEBEB;color:#791F1F}
+.unknown .step-num{background:#EEEDFE;color:#3C3489}
+.b-ok{background:#E1F5EE;color:#085041}
+.b-warn{background:#FAEEDA;color:#633806}
+.b-fail{background:#FCEBEB;color:#791F1F}
+.b-unk{background:#EEEDFE;color:#3C3489}
+.grid-2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.grid-3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px}
+.card{padding:10px 12px;border-radius:8px;border:1px solid var(--border);background:var(--surface-1)}
+.card h4{font-size:12px;font-weight:500;margin-bottom:4px}
+.card p{font-size:11px;color:var(--text-secondary);line-height:1.5}
+.card code{font-size:10px;font-family:var(--font-mono);color:var(--text-muted)}
+.card.ok-card{border-left:3px solid #1D9E75}
+.card.warn-card{border-left:3px solid #BA7517}
+.card.fail-card{border-left:3px solid #D85A30}
+.falla-row{display:grid;grid-template-columns:30px 1fr 1fr 1fr;gap:8px;padding:7px 0;border-bottom:1px solid var(--border);font-size:11px;align-items:start}
+.falla-row:last-child{border-bottom:none}
+.falla-hdr{display:grid;grid-template-columns:30px 1fr 1fr 1fr;gap:8px;padding:4px 0 8px;border-bottom:2px solid var(--border-strong);font-size:10px;font-weight:500;color:var(--text-secondary);text-transform:uppercase;letter-spacing:.06em}
+.tag{display:inline-block;padding:1px 5px;border-radius:3px;font-family:var(--font-mono);font-size:10px;background:var(--surface-0);border:1px solid var(--border)}
+</style>
+
+<div class="section">
+<h3>Flujo INVESTIGAR — cada paso y su estado real</h3>
+<div>
+
+<div class="step ok">
+  <div class="step-num">1</div>
+  <div class="step-body">
+    <div class="step-title">Usuario escribe query + Enter / clic Buscar</div>
+    <div class="step-code">$('inv-query').value → runSearch()</div>
+  </div>
+  <span class="badge b-ok">✓ ok</span>
+</div>
+
+<div class="step ok">
+  <div class="step-num">2</div>
+  <div class="step-body">
+    <div class="step-title">runSearch() llama al endpoint</div>
+    <div class="step-code">GET /api/rag/search-web/?q=…&max_results=8</div>
+    <div class="step-detail">Servidor responde 200 OK — confirmado en logs</div>
+  </div>
+  <span class="badge b-ok">✓ ok</span>
+</div>
+
+<div class="step ok">
+  <div class="step-num">3</div>
+  <div class="step-body">
+    <div class="step-title">Backend scraping html.duckduckgo.com</div>
+    <div class="step-code">requests.get + BeautifulSoup('.web-result') → 4 resultados</div>
+    <div class="step-detail">Selectores verificados: selector correcto, 4 resultados reales</div>
+  </div>
+  <span class="badge b-ok">✓ ok</span>
+</div>
+
+<div class="step fail">
+  <div class="step-num">4</div>
+  <div class="step-body">
+    <div class="step-title">Clasificación automática HEG/SIT</div>
+    <div class="step-code">domain in HEG_DOMAINS → todos "situated"</div>
+    <div class="step-detail">HEG_DOMAINS tiene 12 dominios, ninguno de los resultados actuales está en la lista. soysinaloa.com, gpo.com.mx → "situated" por defecto</div>
+  </div>
+  <span class="badge b-fail">❌ bug</span>
+</div>
+
+<div class="step warn">
+  <div class="step-num">5</div>
+  <div class="step-body">
+    <div class="step-title">renderSearchResults() — divide en columnas HEG / SIT</div>
+    <div class="step-code">heg=[]; sit=[todos] → columna HEG vacía</div>
+    <div class="step-detail">Con clasificación rota, 100% va a columna SIT. Columna HEG: "sin resultados"</div>
+  </div>
+  <span class="badge b-warn">⚠ consecuencia</span>
+</div>
+
+<div class="step unknown">
+  <div class="step-num">6</div>
+  <div class="step-body">
+    <div class="step-title">resultCard() renderiza botones [+HEG] [+SIT]</div>
+    <div class="step-code">onclick="downloadResult(${idx},'hegemonic')"</div>
+    <div class="step-detail">Este código está en script.js en disco (✓ verificado). Pero Safari puede estar sirviendo versión cacheada sin estos botones. No lo sé con certeza sin ver la consola del browser.</div>
+  </div>
+  <span class="badge b-unk">? desconocido</span>
+</div>
+
+<div class="step unknown">
+  <div class="step-num">7</div>
+  <div class="step-body">
+    <div class="step-title">downloadResult(idx, type) → POST /api/rag/download/</div>
+    <div class="step-code">api.post('/api/rag/download/', {url, source_type, theme})</div>
+    <div class="step-detail">El endpoint funciona (curl verificado). Pero si los botones del paso 6 no renderizan, este paso nunca se ejecuta.</div>
+  </div>
+  <span class="badge b-unk">? nunca alcanzado</span>
+</div>
+
+<div class="step unknown">
+  <div class="step-num">8</div>
+  <div class="step-body">
+    <div class="step-title">checkAutoGrieta() → POST /api/rag/grieta/</div>
+    <div class="step-code">GrietaService.generar(heg_ids, sit_ids)</div>
+    <div class="step-detail">GrietaService importa correctamente (✓ verificado). Pero si paso 7 nunca ocurre, heg_ids y sit_ids están vacíos → grieta no se genera.</div>
+  </div>
+  <span class="badge b-unk">? nunca alcanzado</span>
+</div>
+
+<div class="step unknown">
+  <div class="step-num">9</div>
+  <div class="step-body">
+    <div class="step-title">Grieta panel → $('grieta-panel').classList.remove('hidden')</div>
+    <div class="step-code">renderGrieta(g, heg_ids, sit_ids) → innerHTML</div>
+    <div class="step-detail">La lógica existe. Nunca se alcanza porque paso 8 nunca ocurre.</div>
+  </div>
+  <span class="badge b-unk">? nunca alcanzado</span>
+</div>
+
+</div>
+</div>
+
+<div class="section">
+<h3>Inventario de servicios — estado verificado</h3>
+<div class="grid-3">
+  <div class="card ok-card">
+    <h4>RAGService ✓</h4>
+    <p>download_document(url, type, theme)<br>index_document(id)<br>search(query, k)<br>analyze(id, type)</p>
+    <code>app/services/rag_service.py</code>
+  </div>
+  <div class="card ok-card">
+    <h4>GrietaService ✓</h4>
+    <p>generar(heg_ids, sit_ids)<br>resumen LexRank · léxico TF-IDF<br>silencios · actores spaCy<br>cronología · divergencia coseno</p>
+    <code>app/services/grieta_service.py</code>
+  </div>
+  <div class="card ok-card">
+    <h4>NoteService ✓</h4>
+    <p>create/get/update/delete<br>FTS5 MATCH (no LIKE)<br>tags ON CONFLICT IGNORE<br>cifrado Fernet opcional</p>
+    <code>app/services/note_service.py</code>
+  </div>
+  <div class="card ok-card">
+    <h4>SearchService ✓</h4>
+    <p>search_documents → FAISS<br>search_notes → FTS5<br>singleton _get_model()</p>
+    <code>app/services/search_service.py</code>
+  </div>
+  <div class="card ok-card">
+    <h4>AlertService ✓</h4>
+    <p>create/get/trigger/delete<br>check_inactivity (date_downloaded)<br>plyer try/except</p>
+    <code>app/services/alert_service.py</code>
+  </div>
+  <div class="card ok-card">
+    <h4>Integration ✓</h4>
+    <p>create_note_from_document<br>analyze → Markdown → Note</p>
+    <code>app/services/integration.py</code>
+  </div>
+</div>
+</div>
+
+<div class="section">
+<h3>Capa de almacenamiento</h3>
+<div class="grid-2">
+  <div class="card ok-card">
+    <h4>SQLite — data/tekia.db</h4>
+    <p><code>documents</code> id · title · source · source_type · file_path · date_downloaded · theme · indexed<br>
+    <code>notes</code> id · title · content · theme · document_id · encrypted · created_at · updated_at<br>
+    <code>tags</code> · <code>note_tags</code> · <code>alerts</code><br>
+    <code>notes_fts</code> FTS5 + triggers INSERT/UPDATE/DELETE</p>
+  </div>
+  <div class="card ok-card">
+    <h4>FAISS + Files</h4>
+    <p><code>data/embeddings/documents.faiss</code> IndexFlatIP dim=384<br>
+    <code>data/embeddings/documents_mapping.json</code> faiss_pos → sqlite_id<br>
+    <code>data/documents/hegemonic/</code><br>
+    <code>data/documents/situated/</code><br>
+    <code>models/paraphrase-multilingual-MiniLM-L12-v2/</code></p>
+  </div>
+</div>
+</div>
+
+<div class="section">
+<h3>Tabla de fallas — causa raíz y fix exacto</h3>
+<div class="falla-hdr">
+  <div>#</div><div>Falla</div><div>Causa raíz</div><div>Fix</div>
+</div>
+
+<div class="falla-row">
+  <div><span class="badge b-fail">❌</span></div>
+  <div><strong>Todos los resultados = "situated"</strong><br>No hay columna HEG</div>
+  <div><code>HEG_DOMAINS</code> tiene 12 dominios. Los resultados vienen de dominios no listados.</div>
+  <div>Reemplazar clasificación por dominio → clasificación por bias_vocab (ya instalado). O añadir dominios mexicanos relevantes.</div>
+</div>
+
+<div class="falla-row">
+  <div><span class="badge b-unk">?</span></div>
+  <div><strong>Botones [+HEG][+SIT] no aparecen / Grieta no genera</strong></div>
+  <div>No sé con certeza. Puede ser: a) Safari cache script.js viejo, b) error JS silenciado, c) consecuencia de paso anterior (sin HEG, grieta no tiene qué cruzar)</div>
+  <div>Necesito ver consola Safari (Opt+Cmd+I → Console) para saberlo con certeza. Sin eso, estoy adivinando.</div>
+</div>
+
+<div class="falla-row">
+  <div><span class="badge b-warn">⚠</span></div>
+  <div><strong>Estado se pierde al navegar</strong></div>
+  <div>sessionStorage está en el código en disco pero si Safari sirve script.js viejo, no se ejecuta.</div>
+  <div>Misma raíz que arriba. Cache busting con <code>?v=3</code> en base.html debería resolverlo.</div>
+</div>
+</div>
