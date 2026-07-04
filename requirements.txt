@@ -1,0 +1,44 @@
+# TEKIA - Dependencias
+# Sistema soberano de investigación
+
+# Backend
+fastapi==0.109.0
+uvicorn==0.27.0
+python-multipart==0.0.6
+jinja2==3.1.3
+python-dotenv==1.0.0
+
+# Base de datos
+sqlalchemy==2.0.25
+pydantic==2.5.3
+
+# Scraping y HTTP
+requests==2.31.0
+beautifulsoup4==4.12.2
+
+# Procesamiento de texto y NLP
+spacy==3.7.2
+https://github.com/explosion/spacy-models/releases/download/es_core_news_md-3.7.0/es_core_news_md-3.7.0-py3-none-any.whl
+nltk==3.8.1
+sumy==0.11.0
+scikit-learn==1.4.0
+numpy==1.26.2
+
+# PDF y documentos
+pymupdf==1.23.5
+
+# Búsqueda vectorial
+faiss-cpu==1.7.4
+sentence-transformers==2.2.2
+
+# Cifrado
+cryptography==42.0.2
+
+# Fechas
+dateparser==1.2.0
+
+# Alertas (notificaciones locales)
+plyer==2.1.0
+
+# Utilidades
+python-dateutil==2.8.2

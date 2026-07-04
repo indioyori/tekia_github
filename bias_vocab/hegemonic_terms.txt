@@ -1,0 +1,105 @@
+# Vocabulario Hegemónico
+# Términos asociados a discursos de poder, desarrollo, mercado, etc.
+
+desarrollo
+progreso
+modernización
+civilización
+crecimiento
+expansión
+inversión
+mercado
+empresa
+negocio
+capital
+lucro
+ganancia
+beneficio
+productividad
+competitividad
+eficiencia
+rentabilidad
+globalización
+libre comercio
+apertura económica
+privatización
+desregulación
+flexibilización
+ajuste estructural
+reforma
+estabilidad
+seguridad
+orden
+ley
+gobierno
+estado
+institución
+autoridad
+control
+regulación
+normativa
+política pública
+crecimiento económico
+PIB
+inflación
+déficit
+superávit
+deuda externa
+inversión extranjera
+desarrollo sostenible
+agenda 2030
+objetivos de desarrollo sostenible
+cooperación internacional
+ayuda al desarrollo
+banco mundial
+FMI
+OCDE
+OMC
+G20
+G7
+OTAN
+UE
+NAFTA
+T-MEC
+USMCA
+
+# Términos de tecnología y modernidad
+innovación
+tecnología
+digitalización
+transformación digital
+cuarta revolución industrial
+inteligencia artificial
+big data
+blockchain
+fintech
+startup
+emprendimiento
+disrupción
+eficiencia energética
+energías limpias
+
+# Términos de seguridad y defensa
+seguridad nacional
+defensa
+fuerzas armadas
+ejército
+marina
+fuerza aérea
+policía
+inteligencia
+terrorismo
+narcotráfico
+crimen organizado
+
+# Términos de salud pública
+pandemia
+vacuna
+salud pública
+sistema de salud
+hospital
+médico
+enfermedad
+prevención
+tratamiento
+farmacéutica

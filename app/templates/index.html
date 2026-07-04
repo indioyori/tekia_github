@@ -1,0 +1,398 @@
+{% extends "base.html" %}
+{% block title %}TEKIA - Sistema Soberano de Investigación{% endblock %}
+
+{% block content %}
+<div class="home-content">
+    <div class="hero">
+        <h1>Bienvenido a TEKIA</h1>
+        <p class="subtitle">Sistema local soberano de investigación</p>
+        
+        <div class="hero-description">
+            <p>
+                <strong>TEKIA</strong> es una herramienta diseñada para investigadores, científicos de datos y arquitectos RAG 
+                que necesitan analizar fuentes de información desde una perspectiva crítica y soberana.
+            </p>
+            <p>
+                Descarga, indexa y analiza documentos de medios <strong>hegemónicos</strong> y <strong>situados</strong>, 
+                identifica sesgos epistémicos y genera análisis cruzados (La Grieta) sin depender de la nube, LLM o telemetría.
+            </p>
+        </div>
+        
+        <div class="hero-actions">
+            <a href="/rag" class="btn btn-jade btn-lg">
+                <i class="fas fa-search"></i> Comenzar a Investigar
+            </a>
+            <a href="/notes" class="btn btn-copper btn-lg">
+                <i class="fas fa-book"></i> Ver Cuaderno
+            </a>
+        </div>
+    </div>
+    
+    <div class="features">
+        <h2>Características Principales</h2>
+        
+        <div class="features-grid">
+            <div class="feature-card">
+                <div class="feature-icon">
+                    <i class="fas fa-download"></i>
+                </div>
+                <h3>Descarga Inteligente</h3>
+                <p>Descarga documentos de medios hegemónicos y situados con clasificación automática basada en dominios y vocabulario de sesgo.</p>
+            </div>
+            
+            <div class="feature-card">
+                <div class="feature-icon">
+                    <i class="fas fa-database"></i>
+                </div>
+                <h3>Almacenamiento Local</h3>
+                <p>Todo se guarda en tu máquina: documentos, notas, embeddings. Sin nube, sin telemetría, 100% soberano.</p>
+            </div>
+            
+            <div class="feature-card">
+                <div class="feature-icon">
+                    <i class="fas fa-chart-line"></i>
+                </div>
+                <h3>Análisis Avanzado</h3>
+                <p>Genera resúmenes, extrae palabras clave, identifica entidades, detecta silencios epistémicos y calcula divergencias entre corpus.</p>
+            </div>
+            
+            <div class="feature-card">
+                <div class="feature-icon">
+                    <i class="fas fa-book"></i>
+                </div>
+                <h3>Cuaderno de Notas</h3>
+                <p>Escribe notas en Markdown, organízalas por temas y etiquetas, busca con FTS5 y exporta a PDF/HTML.</p>
+            </div>
+            
+            <div class="feature-card">
+                <div class="feature-icon">
+                    <i class="fas fa-bell"></i>
+                </div>
+                <h3>Alertas de Seguimiento</h3>
+                <p>Configura alertas para temas de interés y recibe notificaciones cuando haya nuevos resultados.</p>
+            </div>
+            
+            <div class="feature-card">
+                <div class="feature-icon">
+                    <i class="fas fa-shield-alt"></i>
+                </div>
+                <h3>Privacidad Total</h3>
+                <p>Cifrado opcional de notas, sin rastreo, sin dependencias externas. Tú controlas tus datos.</p>
+            </div>
+        </div>
+    </div>
+    
+    <div class="workflow">
+        <h2>Flujo de Trabajo</h2>
+        
+        <div class="workflow-steps">
+            <div class="workflow-step">
+                <div class="step-number">1</div>
+                <div class="step-content">
+                    <h3>Buscar</h3>
+                    <p>Ingresa un término de investigación y TEKIA buscará en la web fuentes hegemónicas y situadas.</p>
+                </div>
+            </div>
+            
+            <div class="workflow-step">
+                <div class="step-number">2</div>
+                <div class="step-content">
+                    <h3>Descargar</h3>
+                    <p>Selecciona los documentos relevantes y descárgalos a tu máquina local.</p>
+                </div>
+            </div>
+            
+            <div class="workflow-step">
+                <div class="step-number">3</div>
+                <div class="step-content">
+                    <h3>Analizar</h3>
+                    <p>TEKIA genera automáticamente La Grieta: un análisis cruzado entre corpus hegemónicos y situados.</p>
+                </div>
+            </div>
+            
+            <div class="workflow-step">
+                <div class="step-number">4</div>
+                <div class="step-content">
+                    <h3>Documentar</h3>
+                    <p>Guarda tus análisis en el cuaderno de notas, vincúlalos a documentos y organízalos por temas.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="stats">
+        <h2>Estadísticas del Sistema</h2>
+        <div class="stats-grid" id="stats-grid">
+            <div class="stat-card">
+                <div class="stat-icon">
+                    <i class="fas fa-file-alt"></i>
+                </div>
+                <div class="stat-info">
+                    <div class="stat-value" id="doc-count">-</div>
+                    <div class="stat-label">Documentos</div>
+                </div>
+            </div>
+            
+            <div class="stat-card">
+                <div class="stat-icon">
+                    <i class="fas fa-book"></i>
+                </div>
+                <div class="stat-info">
+                    <div class="stat-value" id="note-count">-</div>
+                    <div class="stat-label">Notas</div>
+                </div>
+            </div>
+            
+            <div class="stat-card">
+                <div class="stat-icon">
+                    <i class="fas fa-bell"></i>
+                </div>
+                <div class="stat-info">
+                    <div class="stat-value" id="alert-count">-</div>
+                    <div class="stat-label">Alertas</div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+    .home-content {
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 2rem 0;
+    }
+    
+    .hero {
+        text-align: center;
+        margin-bottom: 3rem;
+    }
+    
+    .hero h1 {
+        font-size: 2.5rem;
+        font-weight: 700;
+        color: var(--text-primary);
+        margin-bottom: 0.5rem;
+    }
+    
+    .hero .subtitle {
+        font-size: 1.25rem;
+        color: var(--text-secondary);
+        margin-bottom: 1.5rem;
+    }
+    
+    .hero-description {
+        max-width: 800px;
+        margin: 0 auto 2rem;
+        text-align: left;
+    }
+    
+    .hero-description p {
+        margin-bottom: 1rem;
+        font-size: 1.125rem;
+        line-height: 1.7;
+    }
+    
+    .hero-actions {
+        display: flex;
+        gap: 1rem;
+        justify-content: center;
+        flex-wrap: wrap;
+    }
+    
+    .features {
+        margin-bottom: 3rem;
+    }
+    
+    .features h2 {
+        text-align: center;
+        font-size: 1.75rem;
+        margin-bottom: 2rem;
+        color: var(--text-primary);
+    }
+    
+    .features-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+        gap: 1.5rem;
+    }
+    
+    .feature-card {
+        background-color: var(--bg-secondary);
+        border: 1px solid var(--border);
+        border-radius: var(--radius);
+        padding: 1.5rem;
+        text-align: center;
+        transition: all 0.2s;
+    }
+    
+    .feature-card:hover {
+        box-shadow: var(--shadow-lg);
+        transform: translateY(-4px);
+    }
+    
+    .feature-icon {
+        font-size: 2rem;
+        color: var(--primary);
+        margin-bottom: 1rem;
+    }
+    
+    .feature-card h3 {
+        font-size: 1.125rem;
+        margin-bottom: 0.5rem;
+        color: var(--text-primary);
+    }
+    
+    .feature-card p {
+        color: var(--text-secondary);
+        font-size: 0.875rem;
+        line-height: 1.6;
+    }
+    
+    .workflow {
+        margin-bottom: 3rem;
+    }
+    
+    .workflow h2 {
+        text-align: center;
+        font-size: 1.75rem;
+        margin-bottom: 2rem;
+        color: var(--text-primary);
+    }
+    
+    .workflow-steps {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+        gap: 1.5rem;
+    }
+    
+    .workflow-step {
+        display: flex;
+        gap: 1rem;
+        align-items: flex-start;
+    }
+    
+    .step-number {
+        width: 40px;
+        height: 40px;
+        background-color: var(--primary);
+        color: white;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: 700;
+        font-size: 1.125rem;
+        flex-shrink: 0;
+    }
+    
+    .step-content h3 {
+        font-size: 1rem;
+        margin-bottom: 0.25rem;
+        color: var(--text-primary);
+    }
+    
+    .step-content p {
+        color: var(--text-secondary);
+        font-size: 0.875rem;
+        line-height: 1.6;
+    }
+    
+    .stats {
+        margin-bottom: 2rem;
+    }
+    
+    .stats h2 {
+        text-align: center;
+        font-size: 1.75rem;
+        margin-bottom: 1.5rem;
+        color: var(--text-primary);
+    }
+    
+    .stats-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 1rem;
+    }
+    
+    .stat-card {
+        background-color: var(--bg-secondary);
+        border: 1px solid var(--border);
+        border-radius: var(--radius);
+        padding: 1.5rem;
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+    }
+    
+    .stat-icon {
+        font-size: 1.5rem;
+        color: var(--primary);
+    }
+    
+    .stat-info {
+        text-align: left;
+    }
+    
+    .stat-value {
+        font-size: 1.75rem;
+        font-weight: 700;
+        color: var(--text-primary);
+    }
+    
+    .stat-label {
+        font-size: 0.875rem;
+        color: var(--text-secondary);
+    }
+    
+    @media (max-width: 768px) {
+        .hero h1 {
+            font-size: 2rem;
+        }
+        
+        .hero .subtitle {
+            font-size: 1rem;
+        }
+        
+        .hero-description p {
+            font-size: 1rem;
+        }
+        
+        .hero-actions {
+            flex-direction: column;
+            align-items: center;
+        }
+        
+        .workflow-step {
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+        }
+        
+        .stat-card {
+            flex-direction: column;
+            text-align: center;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Cargar estadísticas
+document.addEventListener('DOMContentLoaded', function() {
+    fetch('/api/info')
+        .then(response => response.json())
+        .then(data => {
+            document.getElementById('doc-count').textContent = data.documents;
+            document.getElementById('note-count').textContent = data.notes;
+            document.getElementById('alert-count').textContent = data.alerts;
+        })
+        .catch(error => {
+            console.error('Error cargando estadísticas:', error);
+        });
+});
+</script>
+{% endblock %}

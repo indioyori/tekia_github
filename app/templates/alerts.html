@@ -1,0 +1,613 @@
+{% extends "base.html" %}
+{% block title %}Alertas - TEKIA{% endblock %}
+{% block page %}alertas{% endblock %}
+
+{% block extra_css %}
+<style>
+    /* Estilos específicos para Alertas */
+    .alerts-header {
+        margin-bottom: 1.5rem;
+    }
+    
+    .alerts-header h1 {
+        font-size: 1.75rem;
+        font-weight: 700;
+        color: var(--text-primary);
+        margin-bottom: 0.5rem;
+    }
+    
+    .alerts-actions {
+        display: flex;
+        gap: 0.5rem;
+        margin-bottom: 1.5rem;
+    }
+    
+    .alerts-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+        gap: 1rem;
+    }
+    
+    .alert-card {
+        background-color: var(--bg-secondary);
+        border: 1px solid var(--border);
+        border-radius: var(--radius);
+        padding: 1rem;
+        transition: all 0.2s;
+    }
+    
+    .alert-card:hover {
+        box-shadow: var(--shadow-lg);
+        transform: translateY(-2px);
+    }
+    
+    .alert-card.active {
+        border-color: var(--primary);
+    }
+    
+    .alert-card.inactive {
+        opacity: 0.7;
+    }
+    
+    .alert-card-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        margin-bottom: 0.75rem;
+    }
+    
+    .alert-card-title {
+        font-weight: 600;
+        color: var(--text-primary);
+        font-size: 1rem;
+    }
+    
+    .alert-card-status {
+        font-size: 0.75rem;
+    }
+    
+    .alert-card-status.active {
+        color: var(--success);
+    }
+    
+    .alert-card-status.inactive {
+        color: var(--text-muted);
+    }
+    
+    .alert-card-body {
+        margin-bottom: 0.75rem;
+    }
+    
+    .alert-card-query {
+        font-size: 0.875rem;
+        color: var(--text-secondary);
+        margin-bottom: 0.25rem;
+    }
+    
+    .alert-card-theme {
+        font-size: 0.75rem;
+        color: var(--text-muted);
+    }
+    
+    .alert-card-footer {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        font-size: 0.75rem;
+        color: var(--text-muted);
+    }
+    
+    .alert-card-actions {
+        display: flex;
+        gap: 0.25rem;
+    }
+    
+    .alert-card-actions button {
+        padding: 0.25rem 0.5rem;
+        font-size: 0.75rem;
+    }
+    
+    /* Modal de alerta */
+    .modal {
+        display: none;
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background-color: rgba(0, 0, 0, 0.5);
+        z-index: 1000;
+        align-items: center;
+        justify-content: center;
+    }
+    
+    .modal.active {
+        display: flex;
+    }
+    
+    .modal-content {
+        background-color: var(--bg-secondary);
+        border-radius: var(--radius);
+        padding: 1.5rem;
+        max-width: 500px;
+        width: 90%;
+        max-height: 80vh;
+        overflow-y: auto;
+    }
+    
+    .modal-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 1rem;
+        padding-bottom: 0.75rem;
+        border-bottom: 1px solid var(--border);
+    }
+    
+    .modal-close {
+        background: none;
+        border: none;
+        font-size: 1.25rem;
+        cursor: pointer;
+        color: var(--text-muted);
+    }
+    
+    .modal-close:hover {
+        color: var(--text-primary);
+    }
+    
+    .modal-body {
+        margin-bottom: 1rem;
+    }
+    
+    .modal-actions {
+        display: flex;
+        gap: 0.5rem;
+        justify-content: flex-end;
+    }
+    
+    /* Resultados de alerta */
+    .alert-results {
+        margin-top: 1rem;
+        padding-top: 1rem;
+        border-top: 1px solid var(--border);
+    }
+    
+    .alert-results h4 {
+        font-size: 0.9375rem;
+        margin-bottom: 0.5rem;
+    }
+    
+    .result-item {
+        padding: 0.5rem;
+        border: 1px solid var(--border);
+        border-radius: var(--radius-sm);
+        margin-bottom: 0.5rem;
+        font-size: 0.875rem;
+    }
+    
+    .result-item:hover {
+        background-color: var(--bg-tertiary);
+    }
+    
+    /* Filtros */
+    .filters {
+        display: flex;
+        gap: 0.5rem;
+        margin-bottom: 1rem;
+        flex-wrap: wrap;
+    }
+    
+    .filter-btn {
+        padding: 0.25rem 0.75rem;
+        border: 1px solid var(--border);
+        background-color: var(--bg-secondary);
+        border-radius: var(--radius-sm);
+        cursor: pointer;
+        font-size: 0.875rem;
+        transition: all 0.2s;
+    }
+    
+    .filter-btn:hover {
+        background-color: var(--bg-tertiary);
+    }
+    
+    .filter-btn.active {
+        background-color: var(--primary);
+        color: white;
+        border-color: var(--primary);
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="alerts-header">
+    <h1>Alertas de Seguimiento</h1>
+    <p class="text-secondary">Recibe notificaciones cuando haya nuevos resultados para tus búsquedas.</p>
+</div>
+
+<div class="alerts-actions">
+    <button class="btn btn-jade" onclick="newAlert()">
+        <i class="fas fa-plus"></i> Nueva Alerta
+    </button>
+    <button class="btn btn-copper" onclick="triggerAllAlerts()">
+        <i class="fas fa-sync-alt"></i> Disparar Todas
+    </button>
+</div>
+
+<div class="filters">
+    <button class="filter-btn active" data-filter="all" onclick="filterAlerts('all')">
+        Todas
+    </button>
+    <button class="filter-btn" data-filter="active" onclick="filterAlerts('active')">
+        Activas
+    </button>
+    <button class="filter-btn" data-filter="inactive" onclick="filterAlerts('inactive')">
+        Inactivas
+    </button>
+</div>
+
+<div class="alerts-grid" id="alerts-list">
+    <div class="loading" style="padding: 20px; grid-column: 1 / -1;">Cargando alertas...</div>
+</div>
+
+<!-- Modal de nueva/editar alerta -->
+<div class="modal" id="alert-modal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h3 id="modal-title">Nueva Alerta</h3>
+            <button class="modal-close" onclick="closeAlertModal()">&times;</button>
+        </div>
+        <div class="modal-body">
+            <div class="form-group">
+                <label class="form-label">Término de búsqueda *</label>
+                <input type="text" id="alert-query" class="form-input" placeholder="Ej: GPO Ohuira amoniaco...">
+            </div>
+            <div class="form-group">
+                <label class="form-label">Tema (opcional)</label>
+                <input type="text" id="alert-theme" class="form-input" placeholder="Ej: Minería">
+            </div>
+            <div class="form-group">
+                <label class="form-check">
+                    <input type="checkbox" id="alert-active" checked>
+                    <span>Activa</span>
+                </label>
+            </div>
+        </div>
+        <div class="modal-actions">
+            <button class="btn btn-ghost" onclick="closeAlertModal()">Cancelar</button>
+            <button class="btn btn-jade" onclick="saveAlert()">Guardar</button>
+        </div>
+    </div>
+</div>
+
+<!-- Modal de resultados de alerta -->
+<div class="modal" id="results-modal">
+    <div class="modal-content" style="max-width: 800px;">
+        <div class="modal-header">
+            <h3 id="results-title">Resultados de Alerta</h3>
+            <button class="modal-close" onclick="closeResultsModal()">&times;</button>
+        </div>
+        <div class="modal-body" id="results-content">
+            <!-- Contenido dinámico -->
+        </div>
+        <div class="modal-actions">
+            <button class="btn btn-ghost" onclick="closeResultsModal()">Cerrar</button>
+        </div>
+    </div>
+</div>
+
+<!-- Modal de confirmación -->
+<div class="modal" id="confirm-modal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h3 id="confirm-title">Confirmar acción</h3>
+        </div>
+        <div id="confirm-message"></div>
+        <div class="modal-actions">
+            <button class="btn btn-ghost" id="btn-confirm-cancel">Cancelar</button>
+            <button class="btn btn-danger" id="btn-confirm-ok">Confirmar</button>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Estado global
+let alertsData = [];
+let currentAlertId = null;
+let currentFilter = 'all';
+
+// Inicialización
+document.addEventListener('DOMContentLoaded', function() {
+    loadAlerts();
+    
+    // Event listeners
+    document.getElementById('btn-confirm-ok').addEventListener('click', executeConfirm);
+    document.getElementById('btn-confirm-cancel').addEventListener('click', cancelConfirm);
+});
+
+// Cargar alertas
+function loadAlerts() {
+    fetch('/api/alerts/')
+        .then(response => response.json())
+        .then(alerts => {
+            alertsData = alerts;
+            renderAlerts(alerts);
+        })
+        .catch(error => {
+            console.error('Error cargando alertas:', error);
+            document.getElementById('alerts-list').innerHTML = '<div class="empty">Error al cargar alertas</div>';
+        });
+}
+
+// Renderizar alertas
+function renderAlerts(alerts) {
+    const container = document.getElementById('alerts-list');
+    
+    if (alerts.length === 0) {
+        container.innerHTML = '<div class="empty" style="grid-column: 1 / -1;">No hay alertas. Crea una nueva.</div>';
+        return;
+    }
+    
+    container.innerHTML = alerts.map(alert => `
+        <div class="alert-card ${alert.active ? 'active' : 'inactive'}">
+            <div class="alert-card-header">
+                <div class="alert-card-title">${escapeHtml(alert.query)}</div>
+                <div class="alert-card-status ${alert.active ? 'active' : 'inactive'}">
+                    ${alert.active ? 'Activa' : 'Inactiva'}
+                </div>
+            </div>
+            <div class="alert-card-body">
+                ${alert.theme ? `<div class="alert-card-theme"><i class="fas fa-tag"></i> ${escapeHtml(alert.theme)}</div>` : ''}
+                <div class="alert-card-query">${escapeHtml(alert.query)}</div>
+            </div>
+            <div class="alert-card-footer">
+                <div>
+                    ${alert.last_triggered ? `Última: ${formatDate(alert.last_triggered)}` : 'Nunca disparada'}
+                </div>
+                <div class="alert-card-actions">
+                    <button class="btn btn-sm btn-ghost" onclick="triggerAlert(${alert.id})" title="Disparar">
+                        <i class="fas fa-sync-alt"></i>
+                    </button>
+                    <button class="btn btn-sm btn-ghost" onclick="editAlert(${alert.id})" title="Editar">
+                        <i class="fas fa-edit"></i>
+                    </button>
+                    <button class="btn btn-sm btn-danger" onclick="confirmDeleteAlert(${alert.id})" title="Eliminar">
+                        <i class="fas fa-trash"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+    `).join('');
+}
+
+// Nueva alerta
+function newAlert() {
+    currentAlertId = null;
+    document.getElementById('modal-title').textContent = 'Nueva Alerta';
+    document.getElementById('alert-query').value = '';
+    document.getElementById('alert-theme').value = '';
+    document.getElementById('alert-active').checked = true;
+    document.getElementById('alert-modal').classList.add('active');
+}
+
+// Editar alerta
+function editAlert(alertId) {
+    currentAlertId = alertId;
+    const alert = alertsData.find(a => a.id === alertId);
+    
+    if (!alert) return;
+    
+    document.getElementById('modal-title').textContent = 'Editar Alerta';
+    document.getElementById('alert-query').value = alert.query;
+    document.getElementById('alert-theme').value = alert.theme || '';
+    document.getElementById('alert-active').checked = alert.active;
+    document.getElementById('alert-modal').classList.add('active');
+}
+
+// Guardar alerta
+function saveAlert() {
+    const query = document.getElementById('alert-query').value.trim();
+    const theme = document.getElementById('alert-theme').value.trim();
+    const active = document.getElementById('alert-active').checked;
+    
+    if (!query) {
+        alert('Por favor ingresa un término de búsqueda');
+        return;
+    }
+    
+    const url = currentAlertId ? `/api/alerts/${currentAlertId}` : '/api/alerts/';
+    const method = currentAlertId ? 'PUT' : 'POST';
+    
+    fetch(url, {
+        method: method,
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+            query: query,
+            theme: theme,
+            active: active
+        })
+    })
+    .then(response => response.json())
+    .then(data => {
+        closeAlertModal();
+        loadAlerts();
+        alert('Alerta guardada correctamente');
+    })
+    .catch(error => {
+        console.error('Error guardando alerta:', error);
+        alert('Error al guardar la alerta');
+    });
+}
+
+// Cerrar modal de alerta
+function closeAlertModal() {
+    document.getElementById('alert-modal').classList.remove('active');
+    currentAlertId = null;
+}
+
+// Disparar alerta
+function triggerAlert(alertId) {
+    fetch(`/api/alerts/${alertId}/trigger`)
+        .then(response => response.json())
+        .then(data => {
+            if (data.error) {
+                alert(data.error);
+                return;
+            }
+            
+            // Mostrar resultados
+            showResults(data);
+        })
+        .catch(error => {
+            console.error('Error disparando alerta:', error);
+            alert('Error al disparar la alerta');
+        });
+}
+
+// Disparar todas las alertas
+function triggerAllAlerts() {
+    if (!confirm('¿Disparar todas las alertas activas?')) return;
+    
+    fetch('/api/alerts/trigger-all/')
+        .then(response => response.json())
+        .then(data => {
+            alert(`Se dispararon ${data.triggered} alertas`);
+            loadAlerts();
+        })
+        .catch(error => {
+            console.error('Error disparando alertas:', error);
+            alert('Error al disparar las alertas');
+        });
+}
+
+// Mostrar resultados de alerta
+function showResults(data) {
+    const modal = document.getElementById('results-modal');
+    const content = document.getElementById('results-content');
+    
+    document.getElementById('results-title').textContent = `Resultados: ${data.query}`;
+    
+    let html = `
+        <div class="alert-results">
+            <p><strong>Tema:</strong> ${escapeHtml(data.theme || 'Sin tema')}</p>
+            <p><strong>Documentos nuevos:</strong> ${data.new_documents}</p>
+            <p><strong>Notas nuevas:</strong> ${data.new_notes}</p>
+    `;
+    
+    if (data.documents && data.documents.length > 0) {
+        html += `
+            <h4>Documentos</h4>
+            ${data.documents.map(doc => `
+                <div class="result-item">
+                    <strong>${escapeHtml(doc.title)}</strong>
+                    <div>${escapeHtml(doc.body)}</div>
+                    <div style="font-size: 0.75rem; color: var(--text-muted);">
+                        Tipo: ${doc.auto_type} | Dominio: ${doc.domain}
+                    </div>
+                </div>
+            `).join('')}
+        `;
+    }
+    
+    if (data.notes && data.notes.length > 0) {
+        html += `
+            <h4 style="margin-top: 1rem;">Notas</h4>
+            ${data.notes.map(note => `
+                <div class="result-item">
+                    <strong>${escapeHtml(note.title)}</strong>
+                    <div>${escapeHtml(note.content)}</div>
+                </div>
+            `).join('')}
+        `;
+    }
+    
+    html += '</div>';
+    content.innerHTML = html;
+    modal.classList.add('active');
+}
+
+// Cerrar modal de resultados
+function closeResultsModal() {
+    document.getElementById('results-modal').classList.remove('active');
+}
+
+// Confirmar eliminación de alerta
+function confirmDeleteAlert(alertId) {
+    currentAlertId = alertId;
+    document.getElementById('confirm-modal').classList.add('active');
+    document.getElementById('confirm-title').textContent = 'Eliminar alerta';
+    document.getElementById('confirm-message').textContent = '¿Estás seguro de que quieres eliminar esta alerta? Esta acción no se puede deshacer.';
+}
+
+// Ejecutar confirmación
+function executeConfirm() {
+    if (!currentAlertId) return;
+    
+    fetch(`/api/alerts/${currentAlertId}`, {
+        method: 'DELETE'
+    })
+    .then(response => response.json())
+    .then(data => {
+        cancelConfirm();
+        loadAlerts();
+        alert('Alerta eliminada correctamente');
+    })
+    .catch(error => {
+        console.error('Error eliminando alerta:', error);
+        alert('Error al eliminar la alerta');
+        cancelConfirm();
+    });
+}
+
+// Cancelar confirmación
+function cancelConfirm() {
+    document.getElementById('confirm-modal').classList.remove('active');
+    currentAlertId = null;
+}
+
+// Filtrar alertas
+function filterAlerts(filter) {
+    currentFilter = filter;
+    
+    // Actualizar botones de filtro
+    document.querySelectorAll('.filter-btn').forEach(btn => {
+        btn.classList.toggle('active', btn.dataset.filter === filter);
+    });
+    
+    let filtered = alertsData;
+    
+    if (filter === 'active') {
+        filtered = alertsData.filter(a => a.active);
+    } else if (filter === 'inactive') {
+        filtered = alertsData.filter(a => !a.active);
+    }
+    
+    renderAlerts(filtered);
+}
+
+// Formatear fecha
+function formatDate(dateString) {
+    const date = new Date(dateString);
+    return date.toLocaleDateString('es-ES', {
+        day: 'numeric',
+        month: 'short',
+        year: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit'
+    });
+}
+
+// Escapar HTML
+function escapeHtml(text) {
+    if (!text) return '';
+    const div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
+}
+</script>
+{% endblock %}

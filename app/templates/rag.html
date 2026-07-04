@@ -1,0 +1,920 @@
+{% extends "base.html" %}
+{% block title %}Investigar - TEKIA{% endblock %}
+{% block page %}investigar{% endblock %}
+
+{% block extra_css %}
+<style>
+    /* Estilos específicos para la página de Investigación */
+    .inv-header {
+        margin-bottom: 1.5rem;
+    }
+    
+    .inv-header h1 {
+        font-size: 1.75rem;
+        font-weight: 700;
+        color: var(--text-primary);
+        margin-bottom: 0.5rem;
+    }
+    
+    .search-bar {
+        display: flex;
+        gap: 0.5rem;
+        align-items: center;
+        flex-wrap: wrap;
+    }
+    
+    .search-bar input[type="text"] {
+        flex: 1;
+        min-width: 250px;
+    }
+    
+    .search-bar input[type="date"] {
+        padding: 0.5rem;
+        border: 1px solid var(--border);
+        border-radius: var(--radius-sm);
+    }
+    
+    .inv-content {
+        display: flex;
+        flex-direction: column;
+        gap: 1.5rem;
+    }
+    
+    .results-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 1.5rem;
+    }
+    
+    @media (max-width: 900px) {
+        .results-grid {
+            grid-template-columns: 1fr;
+        }
+    }
+    
+    .results-col {
+        background-color: var(--bg-secondary);
+        border: 1px solid var(--border);
+        border-radius: var(--radius);
+        padding: 1rem;
+    }
+    
+    .results-col h3 {
+        font-size: 1.125rem;
+        font-weight: 600;
+        color: var(--text-primary);
+        margin-bottom: 1rem;
+        padding-bottom: 0.5rem;
+        border-bottom: 2px solid var(--primary);
+    }
+    
+    .results-col.col-heg h3 {
+        border-bottom-color: var(--accent);
+    }
+    
+    .results-col.col-sit h3 {
+        border-bottom-color: var(--secondary);
+    }
+    
+    #results-heg,
+    #results-sit {
+        display: flex;
+        flex-direction: column;
+        gap: 0.75rem;
+        min-height: 200px;
+    }
+    
+    .result-card {
+        background-color: var(--bg-primary);
+        border: 1px solid var(--border);
+        border-radius: var(--radius-sm);
+        padding: 1rem;
+        transition: all 0.2s;
+    }
+    
+    .result-card:hover {
+        box-shadow: var(--shadow-lg);
+        transform: translateY(-2px);
+    }
+    
+    .result-card .title {
+        font-weight: 600;
+        color: var(--text-primary);
+        margin-bottom: 0.5rem;
+        font-size: 0.9375rem;
+    }
+    
+    .result-card .url {
+        font-size: 0.75rem;
+        color: var(--text-muted);
+        margin-bottom: 0.5rem;
+        word-break: break-all;
+    }
+    
+    .result-card .snippet {
+        font-size: 0.8125rem;
+        color: var(--text-secondary);
+        line-height: 1.5;
+        margin-bottom: 0.75rem;
+    }
+    
+    .result-card .actions {
+        display: flex;
+        gap: 0.5rem;
+    }
+    
+    .result-card .btn-download {
+        padding: 0.25rem 0.5rem;
+        font-size: 0.75rem;
+    }
+    
+    .result-card .btn-download.heg {
+        background-color: var(--accent);
+        color: white;
+    }
+    
+    .result-card .btn-download.sit {
+        background-color: var(--secondary);
+        color: white;
+    }
+    
+    .result-card .btn-download:hover {
+        opacity: 0.9;
+    }
+    
+    .result-card .already-downloaded {
+        font-size: 0.75rem;
+        color: var(--success);
+    }
+    
+    /* Panel de la Grieta */
+    .grieta-panel {
+        background-color: var(--bg-secondary);
+        border: 2px solid var(--primary);
+        border-radius: var(--radius);
+        padding: 1.5rem;
+        margin-top: 1rem;
+    }
+    
+    .grieta-header {
+        margin-bottom: 1.5rem;
+    }
+    
+    .grieta-header h2 {
+        font-size: 1.5rem;
+        font-weight: 700;
+        color: var(--primary);
+        margin-bottom: 0.75rem;
+    }
+    
+    .grieta-header .flex {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        flex-wrap: wrap;
+    }
+    
+    .divergencia-badge {
+        font-weight: 600;
+        color: var(--primary);
+    }
+    
+    .div-bar {
+        height: 20px;
+        background-color: var(--bg-tertiary);
+        border-radius: 10px;
+        overflow: hidden;
+    }
+    
+    .div-fill {
+        height: 100%;
+        background: linear-gradient(90deg, var(--accent), var(--secondary));
+        border-radius: 10px;
+        transition: width 0.5s ease;
+    }
+    
+    .grieta-body {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+        gap: 1.5rem;
+        margin-bottom: 1.5rem;
+    }
+    
+    .grieta-section {
+        background-color: var(--bg-primary);
+        border-radius: var(--radius-sm);
+        padding: 1rem;
+    }
+    
+    .grieta-section h3 {
+        font-size: 1rem;
+        font-weight: 600;
+        color: var(--text-primary);
+        margin-bottom: 0.75rem;
+        padding-bottom: 0.5rem;
+        border-bottom: 1px solid var(--border);
+    }
+    
+    .grieta-section ul {
+        list-style: none;
+        padding: 0;
+        margin: 0;
+    }
+    
+    .grieta-section li {
+        padding: 0.25rem 0;
+        border-bottom: 1px solid var(--border);
+        font-size: 0.875rem;
+    }
+    
+    .grieta-section li:last-child {
+        border-bottom: none;
+    }
+    
+    .grieta-actions {
+        display: flex;
+        gap: 0.75rem;
+        justify-content: flex-end;
+    }
+    
+    /* Tabla de cronología */
+    .cronologia-table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-top: 0.5rem;
+    }
+    
+    .cronologia-table th,
+    .cronologia-table td {
+        padding: 0.5rem;
+        text-align: left;
+        border-bottom: 1px solid var(--border);
+    }
+    
+    .cronologia-table th {
+        font-weight: 600;
+        color: var(--text-primary);
+        background-color: var(--bg-tertiary);
+    }
+    
+    .cronologia-table tr:hover {
+        background-color: var(--bg-tertiary);
+    }
+    
+    /* Gráfico de divergencia */
+    .chart-container {
+        height: 200px;
+        margin-top: 1rem;
+    }
+    
+    /* Modal de descarga */
+    .modal {
+        display: none;
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background-color: rgba(0, 0, 0, 0.5);
+        z-index: 1000;
+        align-items: center;
+        justify-content: center;
+    }
+    
+    .modal.active {
+        display: flex;
+    }
+    
+    .modal-content {
+        background-color: var(--bg-secondary);
+        border-radius: var(--radius);
+        padding: 1.5rem;
+        max-width: 500px;
+        width: 90%;
+        max-height: 80vh;
+        overflow-y: auto;
+    }
+    
+    .modal-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 1rem;
+        padding-bottom: 0.75rem;
+        border-bottom: 1px solid var(--border);
+    }
+    
+    .modal-close {
+        background: none;
+        border: none;
+        font-size: 1.25rem;
+        cursor: pointer;
+        color: var(--text-muted);
+    }
+    
+    .modal-close:hover {
+        color: var(--text-primary);
+    }
+    
+    /* Estado de descarga */
+    .download-status {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        padding: 0.5rem;
+        border-radius: var(--radius-sm);
+        margin-top: 0.5rem;
+    }
+    
+    .download-status.success {
+        background-color: rgba(40, 167, 69, 0.1);
+        color: var(--success);
+    }
+    
+    .download-status.error {
+        background-color: rgba(220, 53, 69, 0.1);
+        color: var(--danger);
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="inv-header">
+    <h1>Investigar</h1>
+    <div class="search-bar">
+        <input type="text" id="inv-query"
+               placeholder="Tema de investigación: ej. GPO Ohuira amoniaco KfW..."
+               autofocus
+               value="{{ request.query_params.get('q', '') }}">
+        <input type="date" id="inv-from" title="Desde">
+        <input type="date" id="inv-to" title="Hasta">
+        <button class="btn btn-jade" id="btn-buscar">
+            <i class="fas fa-search"></i> Buscar
+        </button>
+    </div>
+</div>
+
+<div class="inv-content">
+    <!-- Resultados HEG / SIT en dos columnas -->
+    <div class="results-grid">
+        <div class="results-col col-heg">
+            <h3>Hegemónico</h3>
+            <div id="results-heg">
+                <div class="empty">Ingresa un tema para investigar</div>
+            </div>
+        </div>
+        <div class="results-col col-sit">
+            <h3>Situado</h3>
+            <div id="results-sit">
+                <div class="empty">Ingresa un tema para investigar</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- LA GRIETA -->
+    <div class="grieta-panel hidden" id="grieta-panel">
+        <div class="grieta-header">
+            <h2>La Grieta Epistémica</h2>
+            <div class="flex gap-4 items-center">
+                <span class="divergencia-badge" id="div-score">Divergencia: --</span>
+                <div class="div-bar" style="width: 150px;">
+                    <div class="div-fill" id="div-bar-fill" style="width: 0%;"></div>
+                </div>
+            </div>
+        </div>
+        <div class="grieta-body" id="grieta-body">
+            <div class="loading" style="padding: 20px; grid-column: 1 / -1;">
+                Analizando corpus...
+            </div>
+        </div>
+        <div class="grieta-actions">
+            <button class="btn btn-jade" onclick="abrirEnCuaderno()">
+                <i class="fas fa-book"></i> Abrir en Cuaderno
+            </button>
+            <button class="btn btn-copper" onclick="abrirAlertaModal()">
+                <i class="fas fa-bell"></i> Alerta de seguimiento
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- Modal para alertas -->
+<div class="modal" id="alerta-modal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h3>Crear Alerta</h3>
+            <button class="modal-close" onclick="cerrarAlertaModal()">&times;</button>
+        </div>
+        <div class="form-group">
+            <label class="form-label">Término de búsqueda</label>
+            <input type="text" id="alerta-query" class="form-input" placeholder="Ej: GPO Ohuira...">
+        </div>
+        <div class="form-group">
+            <label class="form-label">Tema (opcional)</label>
+            <input type="text" id="alerta-theme" class="form-input" placeholder="Ej: Minería">
+        </div>
+        <div class="modal-actions" style="display: flex; gap: 0.5rem; justify-content: flex-end; margin-top: 1rem;">
+            <button class="btn btn-ghost" onclick="cerrarAlertaModal()">Cancelar</button>
+            <button class="btn btn-jade" onclick="crearAlerta()">Crear Alerta</button>
+        </div>
+    </div>
+</div>
+
+<!-- Modal para descarga -->
+<div class="modal" id="download-modal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h3>Descargando...</h3>
+            <button class="modal-close" onclick="cerrarDownloadModal()">&times;</button>
+        </div>
+        <div id="download-status">
+            <div class="loading">Iniciando descarga...</div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Estado global
+let downloadedDocs = new Set();
+let currentQuery = "";
+let currentResults = [];
+
+// Inicialización
+document.addEventListener('DOMContentLoaded', function() {
+    // Cargar documentos ya descargados
+    cargarDocumentosDescargados();
+    
+    // Cargar resultados de búsqueda si hay query en URL
+    const urlParams = new URLSearchParams(window.location.search);
+    const q = urlParams.get('q');
+    if (q) {
+        document.getElementById('inv-query').value = q;
+        runSearch();
+    }
+    
+    // Event listeners
+    document.getElementById('btn-buscar').addEventListener('click', runSearch);
+    document.getElementById('inv-query').addEventListener('keypress', function(e) {
+        if (e.key === 'Enter') {
+            runSearch();
+        }
+    });
+});
+
+// Cargar documentos ya descargados
+function cargarDocumentosDescargados() {
+    fetch('/api/rag/documents/')
+        .then(response => response.json())
+        .then(docs => {
+            docs.forEach(doc => {
+                downloadedDocs.add(doc.url);
+            });
+        })
+        .catch(error => {
+            console.error('Error cargando documentos:', error);
+        });
+}
+
+// Ejecutar búsqueda
+function runSearch() {
+    const query = document.getElementById('inv-query').value.trim();
+    if (!query) {
+        alert('Por favor ingresa un término de búsqueda');
+        return;
+    }
+    
+    currentQuery = query;
+    mostrarCargando();
+    
+    // Actualizar URL
+    const url = new URL(window.location);
+    url.searchParams.set('q', query);
+    window.history.pushState({}, '', url);
+    
+    // Buscar en backend
+    fetch(`/api/rag/search-web/?q=${encodeURIComponent(query)}&max_results=8`)
+        .then(response => response.json())
+        .then(results => {
+            currentResults = results;
+            renderSearchResults(results);
+            checkAutoGrieta();
+        })
+        .catch(error => {
+            console.error('Error en búsqueda:', error);
+            mostrarError('Error al realizar la búsqueda. Intenta de nuevo.');
+        });
+}
+
+// Mostrar estado de cargando
+function mostrarCargando() {
+    document.getElementById('results-heg').innerHTML = '<div class="loading">Buscando...</div>';
+    document.getElementById('results-sit').innerHTML = '<div class="loading">Buscando...</div>';
+}
+
+// Mostrar error
+function mostrarError(mensaje) {
+    document.getElementById('results-heg').innerHTML = `<div class="empty">${mensaje}</div>`;
+    document.getElementById('results-sit').innerHTML = `<div class="empty">${mensaje}</div>`;
+}
+
+// Renderizar resultados de búsqueda
+function renderSearchResults(results) {
+    const hegContainer = document.getElementById('results-heg');
+    const sitContainer = document.getElementById('results-sit');
+    
+    const hegResults = results.filter(r => r.auto_type === 'hegemonic');
+    const sitResults = results.filter(r => r.auto_type === 'situated');
+    
+    if (hegResults.length === 0) {
+        hegContainer.innerHTML = '<div class="empty">No se encontraron resultados hegemónicos</div>';
+    } else {
+        hegContainer.innerHTML = hegResults.map((r, i) => resultCard(r, i, 'heg')).join('');
+    }
+    
+    if (sitResults.length === 0) {
+        sitContainer.innerHTML = '<div class="empty">No se encontraron resultados situados</div>';
+    } else {
+        sitContainer.innerHTML = sitResults.map((r, i) => resultCard(r, i, 'sit')).join('');
+    }
+}
+
+// Tarjeta de resultado
+function resultCard(result, idx, type) {
+    const isDownloaded = downloadedDocs.has(result.href);
+    const globalIdx = currentResults.findIndex(r => r.href === result.href);
+    
+    if (isDownloaded) {
+        return `
+            <div class="result-card">
+                <div class="title">${escapeHtml(result.title)}</div>
+                <div class="url">${escapeHtml(result.href)}</div>
+                <div class="snippet">${escapeHtml(result.body)}</div>
+                <div class="already-downloaded">✓ Documento descargado</div>
+            </div>
+        `;
+    }
+    
+    return `
+        <div class="result-card">
+            <div class="title">${escapeHtml(result.title)}</div>
+            <div class="url">${escapeHtml(result.href)}</div>
+            <div class="snippet">${escapeHtml(result.body)}</div>
+            <div class="actions">
+                <button class="btn btn-download ${type}" 
+                        onclick="downloadResult(${globalIdx}, '${type}')">
+                    <i class="fas fa-plus"></i> +${type.toUpperCase()}
+                </button>
+            </div>
+        </div>
+    `;
+}
+
+// Descargar resultado
+function downloadResult(idx, type) {
+    const result = currentResults[idx];
+    if (!result) return;
+    
+    // Mostrar modal de descarga
+    const modal = document.getElementById('download-modal');
+    const statusDiv = document.getElementById('download-status');
+    modal.classList.add('active');
+    statusDiv.innerHTML = '<div class="loading">Descargando documento...</div>';
+    
+    // Obtener tema (opcional)
+    const theme = prompt('Tema (opcional):', currentQuery);
+    
+    fetch('/api/rag/download/', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+            url: result.href,
+            source_type: type,
+            theme: theme || currentQuery
+        })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.id) {
+            downloadedDocs.add(result.href);
+            statusDiv.innerHTML = `
+                <div class="download-status success">
+                    <i class="fas fa-check-circle"></i>
+                    Documento descargado: ${escapeHtml(result.title)}
+                </div>
+            `;
+            
+            // Actualizar UI
+            setTimeout(() => {
+                cerrarDownloadModal();
+                renderSearchResults(currentResults);
+                checkAutoGrieta();
+            }, 1000);
+            
+            // Indexar documento
+            fetch(`/api/rag/index/${data.id}`, { method: 'POST' })
+                .catch(error => console.error('Error indexando:', error));
+        } else {
+            throw new Error('No se recibió ID del documento');
+        }
+    })
+    .catch(error => {
+        console.error('Error descargando:', error);
+        statusDiv.innerHTML = `
+            <div class="download-status error">
+                <i class="fas fa-exclamation-circle"></i>
+                Error descargando documento
+            </div>
+        `;
+    });
+}
+
+// Cerrar modal de descarga
+function cerrarDownloadModal() {
+    document.getElementById('download-modal').classList.remove('active');
+}
+
+// Verificar si se puede generar la Grieta automáticamente
+function checkAutoGrieta() {
+    fetch('/api/rag/documents/')
+        .then(response => response.json())
+        .then(docs => {
+            const hegDocs = docs.filter(d => d.source_type === 'hegemonic');
+            const sitDocs = docs.filter(d => d.source_type === 'situated');
+            
+            if (hegDocs.length > 0 && sitDocs.length > 0) {
+                const hegIds = hegDocs.map(d => d.id);
+                const sitIds = sitDocs.map(d => d.id);
+                generarGrieta(hegIds, sitIds);
+            }
+        })
+        .catch(error => {
+            console.error('Error verificando documentos:', error);
+        });
+}
+
+// Generar Grieta
+function generarGrieta(hegIds, sitIds) {
+    const panel = document.getElementById('grieta-panel');
+    const body = document.getElementById('grieta-body');
+    
+    panel.classList.remove('hidden');
+    body.innerHTML = '<div class="loading" style="padding: 20px; grid-column: 1 / -1;">Analizando corpus...</div>';
+    
+    fetch('/api/rag/grieta/', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+            heg_ids: hegIds,
+            sit_ids: sitIds
+        })
+    })
+    .then(response => response.json())
+    .then(data => {
+        renderGrieta(data, hegIds, sitIds);
+    })
+    .catch(error => {
+        console.error('Error generando grieta:', error);
+        body.innerHTML = '<div class="empty">Error al generar la Grieta. Intenta de nuevo.</div>';
+    });
+}
+
+// Renderizar Grieta
+function renderGrieta(data, hegIds, sitIds) {
+    const body = document.getElementById('grieta-body');
+    
+    if (data.error) {
+        body.innerHTML = `<div class="empty">${data.error}</div>`;
+        return;
+    }
+    
+    // Actualizar divergencia
+    const divergencia = data.divergencia || 0;
+    document.getElementById('div-score').textContent = `Divergencia: ${(divergencia * 100).toFixed(1)}%`;
+    document.getElementById('div-bar-fill').style.width = `${divergencia * 100}%`;
+    
+    // Crear HTML de la Grieta
+    let html = '';
+    
+    // Resúmenes
+    if (data.resumen_heg || data.resumen_sit) {
+        html += `
+            <div class="grieta-section">
+                <h3>Resúmenes</h3>
+                ${data.resumen_heg ? `<p><strong>Hegemónico:</strong> ${escapeHtml(data.resumen_heg)}</p>` : ''}
+                ${data.resumen_sit ? `<p><strong>Situado:</strong> ${escapeHtml(data.resumen_sit)}</p>` : ''}
+            </div>
+        `;
+    }
+    
+    // Léxico
+    if (data.lexicon) {
+        html += `
+            <div class="grieta-section">
+                <h3>Léxico</h3>
+                <div>
+                    <strong>Exclusivo Hegemónico:</strong>
+                    <ul>
+                        ${data.lexicon.exclusivo_heg.map(t => `<li>${escapeHtml(t)}</li>`).join('')}
+                    </ul>
+                </div>
+                <div>
+                    <strong>Exclusivo Situado:</strong>
+                    <ul>
+                        ${data.lexicon.exclusivo_sit.map(t => `<li>${escapeHtml(t)}</li>`).join('')}
+                    </ul>
+                </div>
+                <div>
+                    <strong>Compartido:</strong>
+                    <ul>
+                        ${data.lexicon.compartido.map(t => `<li>${escapeHtml(t)}</li>`).join('')}
+                    </ul>
+                </div>
+            </div>
+        `;
+    }
+    
+    // Silencios
+    if (data.silencios) {
+        html += `
+            <div class="grieta-section">
+                <h3>Silencios Epistémicos</h3>
+                <div>
+                    <strong>Hegemónico silencia:</strong>
+                    <ul>
+                        ${data.silencios.heg_silencia.map(t => `<li>${escapeHtml(t)}</li>`).join('')}
+                    </ul>
+                </div>
+                <div>
+                    <strong>Situado silencia:</strong>
+                    <ul>
+                        ${data.silencios.sit_silencia.map(t => `<li>${escapeHtml(t)}</li>`).join('')}
+                    </ul>
+                </div>
+            </div>
+        `;
+    }
+    
+    // Actores
+    if (data.actores && data.actores.length > 0) {
+        html += `
+            <div class="grieta-section">
+                <h3>Actores Clave</h3>
+                <table class="cronologia-table">
+                    <thead>
+                        <tr>
+                            <th>Actor</th>
+                            <th>Verbos (Hegemónico)</th>
+                            <th>Verbos (Situado)</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${data.actores.map(a => `
+                            <tr>
+                                <td><strong>${escapeHtml(a.actor)}</strong></td>
+                                <td>${escapeHtml(a.heg_verbos.join(', '))}</td>
+                                <td>${escapeHtml(a.sit_verbos.join(', '))}</td>
+                            </tr>
+                        `).join('')}
+                    </tbody>
+                </table>
+            </div>
+        `;
+    }
+    
+    // Cronología
+    if (data.cronologia && data.cronologia.length > 0) {
+        html += `
+            <div class="grieta-section">
+                <h3>Cronología</h3>
+                <table class="cronologia-table">
+                    <thead>
+                        <tr>
+                            <th>Año</th>
+                            <th>Hegemónico</th>
+                            <th>Situado</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${data.cronologia.map(e => `
+                            <tr>
+                                <td><strong>${e.year}</strong></td>
+                                <td>${escapeHtml(e.heg.join(', '))}</td>
+                                <td>${escapeHtml(e.sit.join(', '))}</td>
+                            </tr>
+                        `).join('')}
+                    </tbody>
+                </table>
+            </div>
+        `;
+    }
+    
+    // Sesgos
+    if (data.sesgos) {
+        html += `
+            <div class="grieta-section">
+                <h3>Sesgos Epistémicos</h3>
+                <p><strong>Dominancia en Hegemónico:</strong> ${escapeHtml(data.sesgos.dominancia_heg)}</p>
+                <p><strong>Dominancia en Situado:</strong> ${escapeHtml(data.sesgos.dominancia_sit)}</p>
+            </div>
+        `;
+    }
+    
+    body.innerHTML = html || '<div class="empty">No hay datos para mostrar</div>';
+}
+
+// Abrir en cuaderno
+function abrirEnCuaderno() {
+    const query = document.getElementById('inv-query').value;
+    const theme = prompt('Tema para la nota:', query);
+    
+    if (theme) {
+        // Obtener IDs de documentos
+        fetch('/api/rag/documents/')
+            .then(response => response.json())
+            .then(docs => {
+                const hegIds = docs.filter(d => d.source_type === 'hegemonic').map(d => d.id);
+                const sitIds = docs.filter(d => d.source_type === 'situated').map(d => d.id);
+                
+                if (hegIds.length === 0 || sitIds.length === 0) {
+                    alert('Necesitas documentos de ambos tipos (hegemónico y situado) para crear una nota de Grieta.');
+                    return;
+                }
+                
+                // Crear nota con análisis de Grieta
+                fetch('/api/notes/from-document/1', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        title: `Grieta: ${theme}`,
+                        theme: theme
+                    })
+                })
+                .then(response => response.json())
+                .then(data => {
+                    window.location.href = `/notes?note_id=${data.id}`;
+                })
+                .catch(error => {
+                    console.error('Error creando nota:', error);
+                    alert('Error al crear la nota. Intenta de nuevo.');
+                });
+            });
+    }
+}
+
+// Modal de alerta
+function abrirAlertaModal() {
+    document.getElementById('alerta-modal').classList.add('active');
+    document.getElementById('alerta-query').value = currentQuery;
+}
+
+function cerrarAlertaModal() {
+    document.getElementById('alerta-modal').classList.remove('active');
+}
+
+function crearAlerta() {
+    const query = document.getElementById('alerta-query').value.trim();
+    const theme = document.getElementById('alerta-theme').value.trim();
+    
+    if (!query) {
+        alert('Por favor ingresa un término de búsqueda');
+        return;
+    }
+    
+    fetch('/api/alerts/', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+            query: query,
+            theme: theme || currentQuery
+        })
+    })
+    .then(response => response.json())
+    .then(data => {
+        cerrarAlertaModal();
+        alert(`Alerta creada: ${data.query}`);
+    })
+    .catch(error => {
+        console.error('Error creando alerta:', error);
+        alert('Error al crear la alerta. Intenta de nuevo.');
+    });
+}
+
+// Utilidades
+function escapeHtml(text) {
+    if (!text) return '';
+    const div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
+}
+</script>
+{% endblock %}

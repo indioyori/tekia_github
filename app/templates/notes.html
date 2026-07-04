@@ -1,0 +1,944 @@
+{% extends "base.html" %}
+{% block title %}Cuaderno - TEKIA{% endblock %}
+{% block page %}cuaderno{% endblock %}
+
+{% block extra_css %}
+<style>
+    /* Estilos específicos para el Cuaderno */
+    .notes-layout {
+        display: grid;
+        grid-template-columns: 280px 1fr;
+        gap: 1.5rem;
+        min-height: 500px;
+    }
+    
+    @media (max-width: 900px) {
+        .notes-layout {
+            grid-template-columns: 1fr;
+        }
+    }
+    
+    /* Panel izquierdo: lista de notas */
+    .notes-list-panel {
+        background-color: var(--bg-secondary);
+        border: 1px solid var(--border);
+        border-radius: var(--radius);
+        padding: 1rem;
+        display: flex;
+        flex-direction: column;
+    }
+    
+    .nlp-header {
+        margin-bottom: 1rem;
+    }
+    
+    .nlp-header h2 {
+        font-size: 1.25rem;
+        font-weight: 600;
+        color: var(--text-primary);
+        margin-bottom: 0.75rem;
+    }
+    
+    .nlp-search {
+        margin-bottom: 1rem;
+    }
+    
+    .nlp-search input {
+        width: 100%;
+        padding: 0.5rem;
+        border: 1px solid var(--border);
+        border-radius: var(--radius-sm);
+    }
+    
+    .note-items {
+        flex: 1;
+        overflow-y: auto;
+        min-height: 200px;
+    }
+    
+    .note-item {
+        padding: 0.75rem;
+        border: 1px solid var(--border);
+        border-radius: var(--radius-sm);
+        margin-bottom: 0.5rem;
+        cursor: pointer;
+        transition: all 0.2s;
+    }
+    
+    .note-item:hover {
+        background-color: var(--bg-tertiary);
+        border-color: var(--primary);
+    }
+    
+    .note-item.active {
+        background-color: var(--primary-light);
+        color: white;
+        border-color: var(--primary);
+    }
+    
+    .note-item .title {
+        font-weight: 600;
+        margin-bottom: 0.25rem;
+        font-size: 0.9375rem;
+    }
+    
+    .note-item .preview {
+        font-size: 0.8125rem;
+        color: var(--text-secondary);
+        line-height: 1.4;
+    }
+    
+    .note-item .meta {
+        display: flex;
+        gap: 0.5rem;
+        margin-top: 0.5rem;
+        font-size: 0.75rem;
+        color: var(--text-muted);
+    }
+    
+    .note-item .meta span {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.25rem;
+    }
+    
+    .nlp-new-btn {
+        margin-top: 1rem;
+    }
+    
+    .nlp-new-btn button {
+        width: 100%;
+    }
+    
+    /* Panel derecho: editor */
+    .editor-panel {
+        background-color: var(--bg-secondary);
+        border: 1px solid var(--border);
+        border-radius: var(--radius);
+        padding: 1rem;
+        display: flex;
+        flex-direction: column;
+    }
+    
+    .editor-panel.hidden {
+        display: none;
+    }
+    
+    .editor-meta {
+        display: flex;
+        flex-direction: column;
+        gap: 0.5rem;
+        margin-bottom: 1rem;
+    }
+    
+    .editor-meta input {
+        padding: 0.5rem;
+        border: 1px solid var(--border);
+        border-radius: var(--radius-sm);
+        font-size: 0.875rem;
+    }
+    
+    .editor-meta .note-title-input {
+        font-size: 1.125rem;
+        font-weight: 600;
+    }
+    
+    /* Toolbar de formato */
+    .editor-toolbar {
+        display: flex;
+        gap: 0.25rem;
+        padding: 0.5rem;
+        background-color: var(--bg-tertiary);
+        border-radius: var(--radius-sm);
+        margin-bottom: 1rem;
+        flex-wrap: wrap;
+    }
+    
+    .tb-btn {
+        padding: 0.25rem 0.5rem;
+        border: 1px solid var(--border);
+        background-color: var(--bg-secondary);
+        border-radius: var(--radius-sm);
+        cursor: pointer;
+        font-size: 0.875rem;
+        transition: all 0.2s;
+    }
+    
+    .tb-btn:hover {
+        background-color: var(--bg-primary);
+    }
+    
+    .tb-sep {
+        width: 1px;
+        background-color: var(--border);
+        margin: 0 0.25rem;
+    }
+    
+    /* Tabs Editar / Vista previa */
+    .editor-tabs {
+        display: flex;
+        border-bottom: 1px solid var(--border);
+        margin-bottom: 1rem;
+    }
+    
+    .editor-tab {
+        padding: 0.5rem 1rem;
+        cursor: pointer;
+        border-bottom: 2px solid transparent;
+        transition: all 0.2s;
+        font-size: 0.875rem;
+        color: var(--text-secondary);
+    }
+    
+    .editor-tab:hover {
+        color: var(--text-primary);
+    }
+    
+    .editor-tab.active {
+        color: var(--primary);
+        border-bottom-color: var(--primary);
+    }
+    
+    .editor-body {
+        flex: 1;
+        min-height: 300px;
+        position: relative;
+    }
+    
+    .note-textarea {
+        width: 100%;
+        height: 100%;
+        padding: 0.75rem;
+        border: 1px solid var(--border);
+        border-radius: var(--radius-sm);
+        font-family: var(--font-sans);
+        font-size: 0.875rem;
+        resize: none;
+        outline: none;
+    }
+    
+    .note-textarea:focus {
+        border-color: var(--primary);
+        box-shadow: 0 0 0 2px rgba(8, 80, 65, 0.2);
+    }
+    
+    .note-preview {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        padding: 0.75rem;
+        background-color: var(--bg-secondary);
+        border: 1px solid var(--border);
+        border-radius: var(--radius-sm);
+        overflow-y: auto;
+    }
+    
+    .note-preview.hidden {
+        display: none;
+    }
+    
+    /* Footer del editor */
+    .editor-footer {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-top: 1rem;
+        padding-top: 1rem;
+        border-top: 1px solid var(--border);
+    }
+    
+    .editor-footer-left,
+    .editor-footer-right {
+        display: flex;
+        gap: 0.5rem;
+    }
+    
+    /* Modal de confirmación */
+    .modal {
+        display: none;
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background-color: rgba(0, 0, 0, 0.5);
+        z-index: 1000;
+        align-items: center;
+        justify-content: center;
+    }
+    
+    .modal.active {
+        display: flex;
+    }
+    
+    .modal-content {
+        background-color: var(--bg-secondary);
+        border-radius: var(--radius);
+        padding: 1.5rem;
+        max-width: 500px;
+        width: 90%;
+    }
+    
+    .modal-header {
+        margin-bottom: 1rem;
+    }
+    
+    .modal-actions {
+        display: flex;
+        gap: 0.5rem;
+        justify-content: flex-end;
+    }
+    
+    /* Estilos para Markdown */
+    .note-preview h1 {
+        font-size: 1.5rem;
+        margin-bottom: 0.75rem;
+    }
+    
+    .note-preview h2 {
+        font-size: 1.25rem;
+        margin-bottom: 0.5rem;
+    }
+    
+    .note-preview h3 {
+        font-size: 1.125rem;
+        margin-bottom: 0.5rem;
+    }
+    
+    .note-preview p {
+        margin-bottom: 0.75rem;
+    }
+    
+    .note-preview ul,
+    .note-preview ol {
+        margin-bottom: 0.75rem;
+        padding-left: 1.5rem;
+    }
+    
+    .note-preview code {
+        background-color: var(--bg-tertiary);
+        padding: 0.125rem 0.25rem;
+        border-radius: var(--radius-sm);
+        font-family: var(--font-mono);
+        font-size: 0.875rem;
+    }
+    
+    .note-preview pre {
+        background-color: var(--bg-tertiary);
+        padding: 0.75rem;
+        border-radius: var(--radius-sm);
+        overflow-x: auto;
+        font-family: var(--font-mono);
+        font-size: 0.875rem;
+        margin-bottom: 0.75rem;
+    }
+    
+    .note-preview blockquote {
+        border-left: 3px solid var(--primary);
+        padding-left: 1rem;
+        margin-left: 0;
+        color: var(--text-secondary);
+    }
+    
+    /* Tags */
+    .tag {
+        display: inline-block;
+        padding: 0.125rem 0.375rem;
+        background-color: var(--bg-tertiary);
+        border-radius: var(--radius-sm);
+        font-size: 0.75rem;
+        color: var(--text-secondary);
+        margin-right: 0.25rem;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="notes-layout">
+    <!-- Panel izquierdo: lista de notas -->
+    <div class="notes-list-panel">
+        <div class="nlp-header">
+            <h2>Cuaderno</h2>
+            <div class="nlp-search">
+                <input type="text" id="note-search" placeholder="Buscar notas...">
+            </div>
+        </div>
+        <div class="note-items" id="notes-list">
+            <div class="loading" style="padding: 16px;">Cargando...</div>
+        </div>
+        <div class="nlp-new-btn">
+            <button class="btn btn-jade" style="width: 100%;" id="btn-new-note">
+                <i class="fas fa-plus"></i> Nueva nota
+            </button>
+        </div>
+    </div>
+
+    <!-- Panel derecho: editor -->
+    <div class="editor-panel hidden" id="editor-panel">
+        <!-- Metadatos -->
+        <div class="editor-meta">
+            <input class="note-title-input" type="text" id="note-title" placeholder="Título..." required>
+            <input class="note-theme-input" type="text" id="note-theme" placeholder="Tema">
+            <input class="note-tags-input" type="text" id="note-tags" placeholder="Etiquetas (separadas por coma)">
+        </div>
+
+        <!-- Toolbar formato Markdown -->
+        <div class="editor-toolbar">
+            <button class="tb-btn" data-fmt="bold" title="Negrita"><b>B</b></button>
+            <button class="tb-btn" data-fmt="italic" title="Cursiva"><em>I</em></button>
+            <button class="tb-btn" data-fmt="h2" title="Título 2">H2</button>
+            <button class="tb-btn" data-fmt="h3" title="Título 3">H3</button>
+            <div class="tb-sep"></div>
+            <button class="tb-btn" data-fmt="strike" title="Tachado"><s>S</s></button>
+            <button class="tb-btn" data-fmt="link" title="Enlace">🔗</button>
+            <button class="tb-btn" data-fmt="quote" title="Cita">"</button>
+            <div class="tb-sep"></div>
+            <button class="tb-btn" data-fmt="ul" title="Lista">•</button>
+            <button class="tb-btn" data-fmt="ol" title="Lista numerada">1.</button>
+            <button class="tb-btn" data-fmt="code" title="Código">&lt;/&gt;</button>
+            <div class="tb-sep"></div>
+            <button class="tb-btn" data-fmt="image" title="Imagen">🖼️</button>
+            <button class="tb-btn" data-fmt="table" title="Tabla">▢</button>
+        </div>
+
+        <!-- Tabs Editar / Vista previa -->
+        <div class="editor-tabs">
+            <div class="editor-tab active" data-tab="edit">Editar</div>
+            <div class="editor-tab" data-tab="preview">Vista previa</div>
+        </div>
+
+        <div class="editor-body">
+            <textarea class="note-textarea" id="note-content" placeholder="Escribe en Markdown..."></textarea>
+            <div class="note-preview hidden" id="panel-preview"></div>
+        </div>
+
+        <!-- Footer: exportación + acciones -->
+        <div class="editor-footer">
+            <div class="editor-footer-left">
+                <button class="btn btn-ghost btn-sm" id="btn-export-md" title="Exportar a Markdown">
+                    <i class="fas fa-file-code"></i> MD
+                </button>
+                <button class="btn btn-ghost btn-sm" id="btn-export-pdf" title="Exportar a PDF">
+                    <i class="fas fa-file-pdf"></i> PDF
+                </button>
+                <button class="btn btn-ghost btn-sm" id="btn-export-html" title="Exportar a HTML">
+                    <i class="fas fa-file-alt"></i> HTML
+                </button>
+                <button class="btn btn-danger btn-sm hidden" id="btn-delete-note" title="Eliminar nota">
+                    <i class="fas fa-trash"></i> Eliminar
+                </button>
+            </div>
+            <div class="editor-footer-right">
+                <button class="btn btn-ghost btn-sm" id="btn-cancel-note">
+                    <i class="fas fa-times"></i> Cancelar
+                </button>
+                <button class="btn btn-jade" id="btn-save-note">
+                    <i class="fas fa-save"></i> Guardar
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal de confirmación -->
+<div class="modal" id="confirm-modal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h3 id="confirm-title">Confirmar acción</h3>
+        </div>
+        <div id="confirm-message"></div>
+        <div class="modal-actions">
+            <button class="btn btn-ghost" id="btn-confirm-cancel">Cancelar</button>
+            <button class="btn btn-danger" id="btn-confirm-ok">Confirmar</button>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Estado global
+let currentNoteId = null;
+let notesData = [];
+let currentSearchQuery = "";
+
+// Inicialización
+document.addEventListener('DOMContentLoaded', function() {
+    // Cargar notas
+    loadNotes();
+    
+    // Event listeners
+    document.getElementById('btn-new-note').addEventListener('click', newNote);
+    document.getElementById('btn-save-note').addEventListener('click', saveNote);
+    document.getElementById('btn-cancel-note').addEventListener('click', cancelNote);
+    document.getElementById('btn-delete-note').addEventListener('click', confirmDelete);
+    document.getElementById('btn-confirm-ok').addEventListener('click', executeConfirm);
+    document.getElementById('btn-confirm-cancel').addEventListener('click', cancelConfirm);
+    
+    // Búsqueda
+    document.getElementById('note-search').addEventListener('input', function(e) {
+        currentSearchQuery = e.target.value;
+        filterNotes();
+    });
+    
+    // Toolbar de formato
+    document.querySelectorAll('.tb-btn').forEach(btn => {
+        btn.addEventListener('click', function() {
+            const fmt = this.dataset.fmt;
+            applyFormat(fmt);
+        });
+    });
+    
+    // Tabs
+    document.querySelectorAll('.editor-tab').forEach(tab => {
+        tab.addEventListener('click', function() {
+            const tabName = this.dataset.tab;
+            switchTab(tabName);
+        });
+    });
+    
+    // Exportación
+    document.getElementById('btn-export-md').addEventListener('click', () => exportNote('markdown'));
+    document.getElementById('btn-export-pdf').addEventListener('click', () => exportNote('pdf'));
+    document.getElementById('btn-export-html').addEventListener('click', () => exportNote('html'));
+    
+    // Verificar si hay note_id en URL
+    const urlParams = new URLSearchParams(window.location.search);
+    const noteId = urlParams.get('note_id');
+    if (noteId) {
+        loadNote(parseInt(noteId));
+    }
+});
+
+// Cargar notas
+function loadNotes() {
+    fetch('/api/notes/')
+        .then(response => response.json())
+        .then(notes => {
+            notesData = notes;
+            renderNotesList(notes);
+        })
+        .catch(error => {
+            console.error('Error cargando notas:', error);
+            document.getElementById('notes-list').innerHTML = '<div class="empty">Error al cargar notas</div>';
+        });
+}
+
+// Renderizar lista de notas
+function renderNotesList(notes) {
+    const container = document.getElementById('notes-list');
+    
+    if (notes.length === 0) {
+        container.innerHTML = '<div class="empty">No hay notas. Crea una nueva.</div>';
+        return;
+    }
+    
+    container.innerHTML = notes.map(note => `
+        <div class="note-item ${currentNoteId === note.id ? 'active' : ''}" 
+             onclick="loadNote(${note.id})">
+            <div class="title">${escapeHtml(note.title)}</div>
+            <div class="preview">${escapeHtml(note.content)}</div>
+            <div class="meta">
+                ${note.theme ? `<span><i class="fas fa-tag"></i> ${escapeHtml(note.theme)}</span>` : ''}
+                <span><i class="fas fa-clock"></i> ${formatDate(note.created_at)}</span>
+            </div>
+        </div>
+    `).join('');
+}
+
+// Cargar una nota
+function loadNote(noteId) {
+    currentNoteId = noteId;
+    
+    fetch(`/api/notes/${noteId}`)
+        .then(response => response.json())
+        .then(note => {
+            // Mostrar editor
+            document.getElementById('editor-panel').classList.remove('hidden');
+            
+            // Cargar datos
+            document.getElementById('note-title').value = note.title;
+            document.getElementById('note-theme').value = note.theme || '';
+            document.getElementById('note-content').value = note.content;
+            
+            // Cargar etiquetas
+            if (note.tags) {
+                document.getElementById('note-tags').value = note.tags.map(t => t.name).join(', ');
+            }
+            
+            // Mostrar botón de eliminar
+            document.getElementById('btn-delete-note').classList.remove('hidden');
+            
+            // Actualizar lista de notas
+            renderNotesList(notesData);
+            
+            // Actualizar URL
+            const url = new URL(window.location);
+            url.searchParams.set('note_id', noteId);
+            window.history.pushState({}, '', url);
+            
+            // Actualizar vista previa
+            updatePreview();
+        })
+        .catch(error => {
+            console.error('Error cargando nota:', error);
+            alert('Error al cargar la nota');
+        });
+}
+
+// Nueva nota
+function newNote() {
+    currentNoteId = null;
+    
+    // Limpiar editor
+    document.getElementById('note-title').value = '';
+    document.getElementById('note-theme').value = '';
+    document.getElementById('note-tags').value = '';
+    document.getElementById('note-content').value = '';
+    
+    // Mostrar editor
+    document.getElementById('editor-panel').classList.remove('hidden');
+    document.getElementById('btn-delete-note').classList.add('hidden');
+    
+    // Actualizar URL
+    const url = new URL(window.location);
+    url.searchParams.delete('note_id');
+    window.history.pushState({}, '', url);
+    
+    // Enfocar título
+    document.getElementById('note-title').focus();
+}
+
+// Guardar nota
+function saveNote() {
+    const title = document.getElementById('note-title').value.trim();
+    const content = document.getElementById('note-content').value;
+    const theme = document.getElementById('note-theme').value.trim();
+    const tags = document.getElementById('note-tags').value.split(',').map(t => t.trim()).filter(t => t);
+    
+    if (!title) {
+        alert('Por favor ingresa un título');
+        return;
+    }
+    
+    const url = currentNoteId ? `/api/notes/${currentNoteId}` : '/api/notes/';
+    const method = currentNoteId ? 'PUT' : 'POST';
+    
+    fetch(url, {
+        method: method,
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+            title: title,
+            content: content,
+            theme: theme,
+            tags: tags
+        })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (currentNoteId) {
+            // Actualizar nota existente
+            const index = notesData.findIndex(n => n.id === currentNoteId);
+            if (index !== -1) {
+                notesData[index] = {
+                    ...notesData[index],
+                    title: title,
+                    content: content,
+                    theme: theme
+                };
+            }
+        } else {
+            // Nueva nota
+            currentNoteId = data.id;
+            notesData.unshift({
+                id: data.id,
+                title: title,
+                content: content,
+                theme: theme,
+                created_at: new Date().toISOString()
+            });
+        }
+        
+        // Actualizar lista
+        renderNotesList(notesData);
+        
+        // Actualizar URL
+        const newUrl = new URL(window.location);
+        newUrl.searchParams.set('note_id', currentNoteId);
+        window.history.pushState({}, '', newUrl);
+        
+        // Mostrar botón de eliminar
+        document.getElementById('btn-delete-note').classList.remove('hidden');
+        
+        alert('Nota guardada correctamente');
+    })
+    .catch(error => {
+        console.error('Error guardando nota:', error);
+        alert('Error al guardar la nota');
+    });
+}
+
+// Cancelar nota
+function cancelNote() {
+    if (currentNoteId) {
+        // Volver a la nota actual
+        loadNote(currentNoteId);
+    } else {
+        // Ocultar editor
+        document.getElementById('editor-panel').classList.add('hidden');
+        
+        // Actualizar URL
+        const url = new URL(window.location);
+        url.searchParams.delete('note_id');
+        window.history.pushState({}, '', url);
+    }
+}
+
+// Confirmar eliminación
+function confirmDelete() {
+    document.getElementById('confirm-modal').classList.add('active');
+    document.getElementById('confirm-title').textContent = 'Eliminar nota';
+    document.getElementById('confirm-message').textContent = '¿Estás seguro de que quieres eliminar esta nota? Esta acción no se puede deshacer.';
+}
+
+// Ejecutar confirmación
+function executeConfirm() {
+    if (!currentNoteId) return;
+    
+    fetch(`/api/notes/${currentNoteId}`, {
+        method: 'DELETE'
+    })
+    .then(response => response.json())
+    .then(data => {
+        // Ocultar modal
+        cancelConfirm();
+        
+        // Eliminar de la lista
+        notesData = notesData.filter(n => n.id !== currentNoteId);
+        renderNotesList(notesData);
+        
+        // Ocultar editor
+        document.getElementById('editor-panel').classList.add('hidden');
+        
+        // Limpiar URL
+        const url = new URL(window.location);
+        url.searchParams.delete('note_id');
+        window.history.pushState({}, '', url);
+        
+        currentNoteId = null;
+        
+        alert('Nota eliminada correctamente');
+    })
+    .catch(error => {
+        console.error('Error eliminando nota:', error);
+        alert('Error al eliminar la nota');
+        cancelConfirm();
+    });
+}
+
+// Cancelar confirmación
+function cancelConfirm() {
+    document.getElementById('confirm-modal').classList.remove('active');
+}
+
+// Filtrar notas
+function filterNotes() {
+    if (!currentSearchQuery) {
+        renderNotesList(notesData);
+        return;
+    }
+    
+    const filtered = notesData.filter(note => 
+        note.title.toLowerCase().includes(currentSearchQuery.toLowerCase()) ||
+        note.content.toLowerCase().includes(currentSearchQuery.toLowerCase()) ||
+        (note.theme && note.theme.toLowerCase().includes(currentSearchQuery.toLowerCase()))
+    );
+    
+    renderNotesList(filtered);
+}
+
+// Aplicar formato
+function applyFormat(fmt) {
+    const textarea = document.getElementById('note-content');
+    const start = textarea.selectionStart;
+    const end = textarea.selectionEnd;
+    const selected = textarea.value.substring(start, end);
+    const before = textarea.value.substring(0, start);
+    const after = textarea.value.substring(end);
+    
+    let newText = '';
+    
+    switch (fmt) {
+        case 'bold':
+            newText = before + `**${selected}**` + after;
+            break;
+        case 'italic':
+            newText = before + `*${selected}*` + after;
+            break;
+        case 'h2':
+            newText = before + `\n## ${selected}\n` + after;
+            break;
+        case 'h3':
+            newText = before + `\n### ${selected}\n` + after;
+            break;
+        case 'strike':
+            newText = before + `~~${selected}~~` + after;
+            break;
+        case 'link':
+            const url = prompt('URL:', 'https://');
+            if (url) {
+                newText = before + `[${selected}](${url})` + after;
+            } else {
+                return;
+            }
+            break;
+        case 'quote':
+            newText = before + `> ${selected}` + after;
+            break;
+        case 'ul':
+            newText = before + `\n- ${selected}` + after;
+            break;
+        case 'ol':
+            newText = before + `\n1. ${selected}` + after;
+            break;
+        case 'code':
+            newText = before + "`" + selected + "`" + after;
+            break;
+        case 'image':
+            const imgUrl = prompt('URL de la imagen:', 'https://');
+            if (imgUrl) {
+                newText = before + `![${selected || 'imagen'}](${imgUrl})` + after;
+            } else {
+                return;
+            }
+            break;
+        case 'table':
+            newText = before + `\n| Columna 1 | Columna 2 |\n|----------|----------|\n| ${selected} |  |\n` + after;
+            break;
+        default:
+            return;
+    }
+    
+    textarea.value = newText;
+    textarea.focus();
+    textarea.selectionStart = start;
+    textarea.selectionEnd = start + (selected ? selected.length + (fmt === 'link' ? url.length + 3 : 2) : 0);
+    
+    updatePreview();
+}
+
+// Cambiar tab
+function switchTab(tabName) {
+    document.querySelectorAll('.editor-tab').forEach(tab => {
+        tab.classList.toggle('active', tab.dataset.tab === tabName);
+    });
+    
+    const textarea = document.getElementById('note-content');
+    const preview = document.getElementById('panel-preview');
+    
+    if (tabName === 'preview') {
+        textarea.classList.add('hidden');
+        preview.classList.remove('hidden');
+        updatePreview();
+    } else {
+        textarea.classList.remove('hidden');
+        preview.classList.add('hidden');
+    }
+}
+
+// Actualizar vista previa
+function updatePreview() {
+    const content = document.getElementById('note-content').value;
+    const preview = document.getElementById('panel-preview');
+    
+    // Simple markdown rendering (para demo)
+    // En producción, usar una librería como marked.js
+    preview.innerHTML = simpleMarkdown(content);
+}
+
+// Renderizado simple de Markdown
+function simpleMarkdown(text) {
+    // Encabezados
+    text = text.replace(/^#\s+(.*$)/gm, '<h1>$1</h1>');
+    text = text.replace(/^##\s+(.*$)/gm, '<h2>$1</h2>');
+    text = text.replace(/^###\s+(.*$)/gm, '<h3>$1</h3>');
+    
+    // Negrita y cursiva
+    text = text.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+    text = text.replace(/\*(.*?)\*/g, '<em>$1</em>');
+    
+    // Tachado
+    text = text.replace(/~~(.*?)~~/g, '<s>$1</s>');
+    
+    // Enlaces
+    text = text.replace(/\[(.*?)\]\((.*?)\)/g, '<a href="$2" target="_blank">$1</a>');
+    
+    // Imágenes
+    text = text.replace(/!\[(.*?)\]\((.*?)\)/g, '<img src="$2" alt="$1" style="max-width: 100%;">');
+    
+    // Citas
+    text = text.replace(/^>\s+(.*$)/gm, '<blockquote>$1</blockquote>');
+    
+    // Listas
+    text = text.replace(/^\-\s+(.*$)/gm, '<li>$1</li>');
+    text = text.replace(/^\d+\.\s+(.*$)/gm, '<li>$1</li>');
+    
+    // Código
+    text = text.replace(/`(.*?)`/g, '<code>$1</code>');
+    
+    // Saltos de línea
+    text = text.replace(/\n\n/g, '</p><p>');
+    text = text.replace(/\n/g, '<br>');
+    
+    return `<p>${text}</p>`;
+}
+
+// Exportar nota
+function exportNote(format) {
+    if (!currentNoteId) {
+        alert('No hay nota seleccionada');
+        return;
+    }
+    
+    fetch(`/api/notes/export/${currentNoteId}?format=${format}`)
+        .then(response => response.json())
+        .then(data => {
+            const blob = new Blob([data.content], { type: 'text/plain' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `nota_${currentNoteId}.${format}`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+        })
+        .catch(error => {
+            console.error('Error exportando nota:', error);
+            alert('Error al exportar la nota');
+        });
+}
+
+// Formatear fecha
+function formatDate(dateString) {
+    const date = new Date(dateString);
+    return date.toLocaleDateString('es-ES', {
+        day: 'numeric',
+        month: 'short',
+        year: 'numeric'
+    });
+}
+
+// Escapar HTML
+function escapeHtml(text) {
+    if (!text) return '';
+    const div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
+}
+</script>
+{% endblock %}
